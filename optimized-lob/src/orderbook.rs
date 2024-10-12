@@ -1,13 +1,14 @@
 // orderbook.rs
-
 use crate::{
     level::{Level, LevelId, PriceLevel, SortedLevels},
-    order::Order,
+    order::{Order, OrderId},
     pool::LevelPool,
     price::Price,
     quantity::Qty,
     utils::MAX_LEVELS,
 };
+use std::collections::HashMap;
+use std::collections::HashSet;
 
 /// Represents an order book that holds bids and asks sorted by price levels.
 #[derive(Clone)]
@@ -15,6 +16,7 @@ pub struct OrderBook {
     pub bids: SortedLevels,    // Sorted levels for bid orders.
     pub asks: SortedLevels,    // Sorted levels for ask orders.
     pub level_pool: LevelPool, // Pool for managing price levels.
+    pub level_orders: HashMap<LevelId, HashSet<OrderId>>,
 }
 
 impl Default for OrderBook {
@@ -31,13 +33,14 @@ impl OrderBook {
             bids: SortedLevels::new(),
             asks: SortedLevels::new(),
             level_pool: LevelPool::new_with_capacity(MAX_LEVELS),
+            level_orders: HashMap::new(),
         }
     }
 
     /// Adds an order to the order book with the given price and quantity.
     /// Determines whether the order is a bid or ask and inserts it accordingly.
     #[inline]
-    pub fn add_order(&mut self, order: &mut Order, price: Price, qty: Qty) {
+    pub fn add_order(&mut self, order: &mut Order, order_id: OrderId, price: Price, qty: Qty) {
         let levels = if price.is_bid() {
             &mut self.bids
         } else {
@@ -77,6 +80,12 @@ impl OrderBook {
             levels.insert(insertion_point, px);
         }
         self.level_pool.get_mut(order.level_id()).unwrap().incr(qty);
+
+        // Add the order ID to the level_orders map
+        self.level_orders
+            .entry(order.level_id())
+            .or_insert_with(HashSet::new)
+            .insert(order_id);
     }
 
     /// Reduces the quantity of an existing order in the order book.
@@ -90,7 +99,7 @@ impl OrderBook {
 
     /// Removes an order from the order book and deallocates the associated level if it becomes empty.
     #[inline]
-    pub fn remove_order(&mut self, order: &mut Order) {
+    pub fn remove_order(&mut self, order: &mut Order, order_id: OrderId) {
         let lvl = self.level_pool.get_mut(order.level_id()).unwrap();
         lvl.decr(order.qty());
 
@@ -104,5 +113,18 @@ impl OrderBook {
             levels.remove(level_price);
             self.level_pool.free(LevelId(order.level_id().value()));
         }
+
+        // Remove the order ID from the level_orders map
+        if let Some(orders) = self.level_orders.get_mut(&order.level_id()) {
+            orders.remove(&order_id);
+            if orders.is_empty() {
+                self.level_orders.remove(&order.level_id());
+            }
+        }
+    }
+    // Method to get orders for a specific level
+    #[inline]
+    pub fn get_orders_for_level(&self, level_id: LevelId) -> Option<&HashSet<OrderId>> {
+        self.level_orders.get(&level_id)
     }
 }

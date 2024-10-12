@@ -145,6 +145,11 @@ impl SortedLevels {
     }
 
     #[inline]
+    pub fn get(&mut self, idx: usize) -> &PriceLevel {
+        &mut self.0[idx]
+    }
+
+    #[inline]
     pub fn get_mut(&mut self, idx: usize) -> &mut PriceLevel {
         &mut self.0[idx]
     }

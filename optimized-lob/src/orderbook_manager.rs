@@ -78,7 +78,7 @@ impl OrderBookManager {
             self.books[book_id.value() as usize] = Some(OrderBook::new());
         }
         if let Some(orderbook) = self.books.get_mut(book_id.value() as usize).unwrap() {
-            orderbook.add_order(&mut order, price, qty);
+            orderbook.add_order(&mut order, order_id, price, qty);
         }
         self.oid_map.insert(order_id, &order);
     }
@@ -100,7 +100,7 @@ impl OrderBookManager {
                 .get_mut(order.book_id().value() as usize)
                 .unwrap()
             {
-                orderbook.remove_order(order);
+                orderbook.remove_order(order, order_id);
             }
         }
         self.oid_map.remove(order_id);
@@ -143,13 +143,13 @@ impl OrderBookManager {
     #[inline]
     pub fn execute_order(&mut self, order_id: OrderId, qty: Qty) {
         if let Some(order) = self.oid_map.get_mut(order_id) {
-            if order.qty() == qty {
+            if order.qty() == qty || order.qty() < qty {
                 if let Some(orderbook) = self
                     .books
                     .get_mut(order.book_id().value() as usize)
                     .unwrap()
                 {
-                    orderbook.remove_order(order);
+                    orderbook.remove_order(order, order_id);
                 }
                 self.oid_map.remove(order_id);
             } else {
@@ -207,7 +207,7 @@ impl OrderBookManager {
                     .price()
                     .is_bid();
                 book_id = order.book_id();
-                book.remove_order(order);
+                book.remove_order(order, order_id);
             }
             self.oid_map.remove(order_id);
         }

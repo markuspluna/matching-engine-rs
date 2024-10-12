@@ -172,4 +172,10 @@ impl OidMap {
         let idx = oid.0 as usize;
         self.data.get_mut(idx)?.as_mut()
     }
+
+    /// Gets next order ID
+    #[inline]
+    pub fn next_id(&self) -> OrderId {
+        OrderId(self.data.len() as u32)
+    }
 }
