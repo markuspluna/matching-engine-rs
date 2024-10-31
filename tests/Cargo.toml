@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 itch-parser = { path = "../itch-parser" }
 optimized-lob = { path = "../optimized-lob" }
+alloy = { version = "0.5", features = ["full"] }

@@ -8,6 +8,7 @@ use crate::{
     quantity::Qty,
     utils::{BookId, MAX_BOOKS},
 };
+use alloy::primitives::U256;
 
 /// Manages multiple order books and orders.
 pub struct OrderBookManager {
@@ -36,7 +37,7 @@ impl OrderBookManager {
     /// - `order_id`: The order ID for the order. Represented as unique reference number.
     /// - `book_id`: The identifier for the book where the order will be placed. Represents as stock locate.
     /// - `qty`: The quantity of the order. Represented as shares in the orderbook.
-    /// - `price32`: The price of the order as a 32-bit unsigned integer. Return the Price(4) in the orderbook.
+    /// - `price_u256`: The price of the order as a 256-bit unsigned integer. Return the Price(4) in the orderbook.
     /// - `is_bid`: A flag indicating whether the order is a bid (true) or ask (false). Return the Buy/Sell Indicator as boolean.
     ///
     /// ## Example:
@@ -57,17 +58,10 @@ impl OrderBookManager {
         order_id: OrderId,
         book_id: BookId,
         qty: Qty,
-        price32: u32,
+        price_u256: U256,
         is_bid: bool,
     ) {
-        let price_i32 = if is_bid {
-            price32 as i32
-        } else {
-            -(price32 as i32)
-        };
-
-        // Create a Price(i32) from the adjusted price_i32.
-        let price = Price(price_i32);
+        let price = Price::from_u256(price_u256, is_bid);
 
         self.oid_map.reserve(order_id);
 
@@ -170,7 +164,7 @@ impl OrderBookManager {
     /// - `order_id`: The order ID for the order to be replaced. Represented as Original unique reference number.
     /// - `new_order_id`: The new order ID for the order that has to be replaced. Represented as the new unique reference number.
     /// - `new_qty`: The quantity of the new order. Represented as shares in the orderbook.
-    /// - `new_price`: The price of the new order as a 32-bit unsigned integer. Return the Price(4) in the orderbook.
+    /// - `new_price`: The price of the new order as a 256-bit unsigned integer. Return the Price(4) in the orderbook.
     ///
     /// ## Example:
     /// ```
@@ -189,7 +183,7 @@ impl OrderBookManager {
         order_id: OrderId,
         new_order_id: OrderId,
         new_qty: Qty,
-        new_price: u32,
+        new_price: U256,
     ) {
         let order = self.oid_map.get_mut(order_id);
         let mut is_bid = true;

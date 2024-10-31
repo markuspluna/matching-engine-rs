@@ -1,3 +1,5 @@
+use alloy::primitives::U256;
+
 // orderbook.rs
 use crate::{
     level::{Level, LevelId, PriceLevel, SortedLevels},
@@ -74,7 +76,7 @@ impl OrderBook {
         if !found_insertion_point {
             let level_ptr = self.level_pool.alloc();
             order.set_level_id(level_ptr);
-            let level = Level::new(price, Qty(0));
+            let level = Level::new(price, Qty(U256::ZERO));
             self.level_pool.set_level(level_ptr, level);
             let px = PriceLevel::new(price, level_ptr);
             levels.insert(insertion_point, px);
