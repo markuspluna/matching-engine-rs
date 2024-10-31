@@ -1,9 +1,9 @@
 // level.rs
 
 use crate::{price::Price, quantity::Qty};
+use alloy::primitives::{I256, U256};
 use std::cmp::Ordering;
 use std::fmt::Debug;
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct LevelId(pub u32);
 
@@ -27,8 +27,8 @@ impl Default for Level {
     #[inline]
     fn default() -> Self {
         Self {
-            price: Price(0),
-            size: Qty(0),
+            price: Price(I256::ZERO),
+            size: Qty(U256::ZERO),
         }
     }
 }
@@ -81,7 +81,7 @@ impl Default for PriceLevel {
     #[inline]
     fn default() -> Self {
         Self {
-            price: Price(0),
+            price: Price(I256::ZERO),
             level_idx: LevelId(0),
         }
     }

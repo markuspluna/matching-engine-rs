@@ -1,6 +1,7 @@
 extern crate itch_parser;
 extern crate optimized_lob;
 
+use alloy::primitives::U256;
 use itch_parser::Body::{
     AddOrder, DeleteOrder, OrderCancelled, OrderExecuted, OrderExecutedWithPrice, ReplaceOrder,
 };
@@ -49,13 +50,12 @@ pub fn test_lob(file_path: &str) {
                         orderbook.add_order(
                             OrderId(id),
                             BookId(stock_locate),
-                            Qty(shares),
-                            price,
+                            Qty(U256::from(shares)),
+                            U256::from(price),
                             is_bid,
                         );
                     }
                     None => {
-                        // Conversion failed due to overflow, handle the error here
                         println!("Failed to convert Order ID u32 due to overflow");
                         break;
                     }
@@ -70,10 +70,9 @@ pub fn test_lob(file_path: &str) {
                 let oid: Option<u32> = order_id.try_into().ok();
                 match oid {
                     Some(id) => {
-                        orderbook.execute_order(OrderId(id), Qty(shares));
+                        orderbook.execute_order(OrderId(id), Qty(U256::from(shares)));
                     }
                     None => {
-                        // Conversion failed due to overflow, handle the error here
                         println!("Failed to convert Order ID u32 due to overflow");
                         break;
                     }
@@ -90,10 +89,9 @@ pub fn test_lob(file_path: &str) {
                 let oid: Option<u32> = order_id.try_into().ok();
                 match oid {
                     Some(id) => {
-                        orderbook.execute_order(OrderId(id), Qty(shares));
+                        orderbook.execute_order(OrderId(id), Qty(U256::from(shares)));
                     }
                     None => {
-                        // Conversion failed due to overflow, handle the error here
                         println!("Failed to convert Order ID u32 due to overflow");
                         break;
                     }
@@ -104,10 +102,9 @@ pub fn test_lob(file_path: &str) {
                 let oid: Option<u32> = order_id.try_into().ok();
                 match oid {
                     Some(id) => {
-                        orderbook.cancel_order(OrderId(id), Qty(shares));
+                        orderbook.cancel_order(OrderId(id), Qty(U256::from(shares)));
                     }
                     None => {
-                        // Conversion failed due to overflow, handle the error here
                         println!("Failed to convert Order ID u32 due to overflow");
                         break;
                     }
@@ -121,7 +118,6 @@ pub fn test_lob(file_path: &str) {
                         orderbook.remove_order(OrderId(id));
                     }
                     None => {
-                        // Conversion failed due to overflow, handle the error here
                         println!("Failed to convert Order ID u32 due to overflow");
                         break;
                     }
@@ -139,10 +135,14 @@ pub fn test_lob(file_path: &str) {
 
                 match (old_oid, new_oid) {
                     (Some(id), Some(new_id)) => {
-                        orderbook.replace_order(OrderId(id), OrderId(new_id), Qty(shares), price);
+                        orderbook.replace_order(
+                            OrderId(id),
+                            OrderId(new_id),
+                            Qty(U256::from(shares)),
+                            U256::from(price),
+                        );
                     }
                     _ => {
-                        // Conversion failed due to overflow, handle the error here
                         println!("Failed to convert Order ID u32 due to overflow");
                         break;
                     }
