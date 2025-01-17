@@ -86,18 +86,18 @@ impl OrderBookManager {
     ///
     /// orderbook.remove_order(OrderId(0));
     /// ```
+    /// Returns the book id of the order that is being removed.
     #[inline]
-    pub fn remove_order(&mut self, order_id: OrderId) {
+    pub fn remove_order(&mut self, order_id: OrderId) -> usize {
+        let mut book_id = 0;
         if let Some(order) = self.oid_map.get_mut(order_id) {
-            if let Some(orderbook) = self
-                .books
-                .get_mut(order.book_id().value() as usize)
-                .unwrap()
-            {
+            book_id = order.book_id().value() as usize;
+            if let Some(orderbook) = self.books.get_mut(book_id).unwrap() {
                 orderbook.remove_order(order, order_id);
             }
         }
         self.oid_map.remove(order_id);
+        book_id
     }
 
     /// Cancels an order by reducing its quantity in the order book.
@@ -110,18 +110,18 @@ impl OrderBookManager {
     ///
     /// orderbook.cancel_order(OrderId(0), Qty(100));
     /// ```
+    /// Returns the book id of the order that is being cancelled.
     #[inline]
-    pub fn cancel_order(&mut self, order_id: OrderId, qty: Qty) {
+    pub fn cancel_order(&mut self, order_id: OrderId, qty: Qty) -> usize {
+        let mut book_id = 0;
         if let Some(order) = self.oid_map.get_mut(order_id) {
-            if let Some(orderbook) = self
-                .books
-                .get_mut(order.book_id().value() as usize)
-                .unwrap()
-            {
+            book_id = order.book_id().value() as usize;
+            if let Some(orderbook) = self.books.get_mut(book_id).unwrap() {
                 orderbook.reduce_order(order, qty);
             }
         }
         self.oid_map.update_qty(order_id, qty);
+        book_id
     }
 
     /// Executes an order by either removing it completely or reducing its quantity.
@@ -177,6 +177,7 @@ impl OrderBookManager {
     ///     500, // Price
     /// );
     /// ```
+    /// Returns the book id of the order that is being replaced.
     #[inline]
     pub fn replace_order(
         &mut self,
@@ -184,7 +185,7 @@ impl OrderBookManager {
         new_order_id: OrderId,
         new_qty: Qty,
         new_price: U256,
-    ) {
+    ) -> usize {
         let order = self.oid_map.get_mut(order_id);
         let mut is_bid = true;
         let mut book_id = BookId(0);
@@ -206,5 +207,6 @@ impl OrderBookManager {
             self.oid_map.remove(order_id);
         }
         self.add_order(new_order_id, book_id, new_qty, new_price, is_bid);
+        book_id.value() as usize
     }
 }
