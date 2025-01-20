@@ -88,16 +88,21 @@ impl OrderBookManager {
     /// ```
     /// Returns the book id of the order that is being removed.
     #[inline]
-    pub fn remove_order(&mut self, order_id: OrderId) -> usize {
-        let mut book_id = 0;
-        if let Some(order) = self.oid_map.get_mut(order_id) {
-            book_id = order.book_id().value() as usize;
-            if let Some(orderbook) = self.books.get_mut(book_id).unwrap() {
+    pub fn remove_order(&mut self, order_id: OrderId) -> Option<Order> {
+        let order = if let Some(order) = self.oid_map.get_mut(order_id) {
+            if let Some(orderbook) = self
+                .books
+                .get_mut(order.book_id().value() as usize)
+                .unwrap()
+            {
                 orderbook.remove_order(order, order_id);
             }
-        }
+            Some(order.clone())
+        } else {
+            None
+        };
         self.oid_map.remove(order_id);
-        book_id
+        order
     }
 
     /// Cancels an order by reducing its quantity in the order book.
@@ -110,18 +115,23 @@ impl OrderBookManager {
     ///
     /// orderbook.cancel_order(OrderId(0), Qty(100));
     /// ```
-    /// Returns the book id of the order that is being cancelled.
+    /// Returns the order that was cancelled.
     #[inline]
-    pub fn cancel_order(&mut self, order_id: OrderId, qty: Qty) -> usize {
-        let mut book_id = 0;
-        if let Some(order) = self.oid_map.get_mut(order_id) {
-            book_id = order.book_id().value() as usize;
-            if let Some(orderbook) = self.books.get_mut(book_id).unwrap() {
+    pub fn cancel_order(&mut self, order_id: OrderId, qty: Qty) -> Option<Order> {
+        let order = if let Some(order) = self.oid_map.get_mut(order_id) {
+            if let Some(orderbook) = self
+                .books
+                .get_mut(order.book_id().value() as usize)
+                .unwrap()
+            {
                 orderbook.reduce_order(order, qty);
             }
-        }
+            Some(order.clone())
+        } else {
+            None
+        };
         self.oid_map.update_qty(order_id, qty);
-        book_id
+        order
     }
 
     /// Executes an order by either removing it completely or reducing its quantity.
