@@ -195,8 +195,7 @@ impl OrderBookManager {
         new_order_id: OrderId,
         new_qty: Qty,
         new_price: U256,
-    ) -> Option<Order> {
-        let mut old_order: Option<Order> = None;
+    ) -> usize {
         let mut is_bid = true;
         let mut book_id = BookId(0);
         if let Some(order) = self.oid_map.get_mut(order_id) {
@@ -214,11 +213,9 @@ impl OrderBookManager {
                 book_id = order.book_id();
                 book.remove_order(order, order_id);
             }
-            old_order = Some(order.clone());
             self.oid_map.remove(order_id);
         }
         self.add_order(new_order_id, book_id, new_qty, new_price, is_bid);
-
-        old_order
+        book_id.value() as usize
     }
 }
